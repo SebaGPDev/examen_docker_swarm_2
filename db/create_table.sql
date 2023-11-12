@@ -1,0 +1,9 @@
+CREATE DATABASE IF NOT EXISTS personas_db;
+USE personas_db;
+
+CREATE TABLE IF NOT EXISTS personas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    Apellido VARCHAR(255),
+    Nombre VARCHAR(255),
+    DNI VARCHAR(255)
+);

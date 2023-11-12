@@ -1,0 +1,57 @@
+version: "3.7"
+
+services:
+  mysql-service:
+    image: mi-mysql-image
+    ports:
+      - "3306:3306"
+    networks:
+      - mi_red
+    volumes:
+      - my-db-volume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: 2021
+
+  rest-service:
+    image: mi-rest-image
+    ports:
+      - "8080:8080"
+    networks:
+      - mi_red
+    deploy:
+      replicas: 1
+
+  soap-service:
+    image: mi-soap-image
+    ports:
+      - "8888:8888"
+    networks:
+      - mi_red
+    deploy:
+      replicas: 1
+
+  app-service:
+    image: mi-app-image
+    ports:
+      - "8081:80"
+    networks:
+      - mi_red
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        delay: 10s
+
+networks:
+  mi_red:
+
+volumes:
+  my-db-volume:

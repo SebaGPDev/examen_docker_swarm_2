@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumir Servicio SOAP</title>
+    <script>
+        function consumirServicioSOAP() {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open('POST', 'http://localhost:8000/wsdl', true);
+
+            var soapRequest =
+                `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:per="http://example.com/personas_wsdl">
+                    <soapenv:Header/>
+                    <soapenv:Body>
+                        <per:GetPersonasRequest/>
+                    </soapenv:Body>
+                </soapenv:Envelope>`;
+
+            xmlhttp.setRequestHeader('Content-Type', 'text/xml');
+
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4) {
+                    if (xmlhttp.status == 200) {
+                        var response = xmlhttp.responseXML;
+                        mostrarDatos(response);
+                    }
+                }
+            }
+
+            xmlhttp.send(soapRequest);
+        }
+
+        function mostrarDatos(xml) {
+            var i;
+            var xmlDoc = xml.documentElement;
+            var table="<tr><th>Apellido</th><th>Nombre</th><th>Documento</th></tr>";
+            var x = xmlDoc.getElementsByTagName("result");
+            for (i = 0; i < x.length; i++) { 
+                var personas = JSON.parse(x[i].childNodes[0].nodeValue);
+                personas.forEach(persona => {
+                    table += "<tr><td>" +
+                    persona.Apellido +
+                    "</td><td>" +
+                    persona.Nombre +
+                    "</td><td>" +
+                    persona.DNI +
+                    "</td></tr>";
+                });
+            }
+            document.getElementById("tablaPersonas").innerHTML = table;
+        }
+    </script>
+</head>
+<body>
+    <h1>Consumir Servicio SOAP</h1>
+    <button onclick="consumirServicioSOAP()">Obtener Datos</button>
+    <table id="tablaPersonas"></table>
+</body>
+</html>

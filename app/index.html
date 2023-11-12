@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumir Servicio SOAP y REST</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script>
+        // Cargar datos cuando la página se inicia
+        window.onload = function() {
+            consumirServicioSOAP();
+        };
+
+        function consumirServicioSOAP() {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open('POST', 'http://localhost:8888/consultar_con_soap', true);
+
+            var soapRequest =
+                `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:per="http://example.com/personas_wsdl">
+                    <soapenv:Header/>
+                    <soapenv:Body>
+                        <per:GetPersonasRequest/>
+                    </soapenv:Body>
+                </soapenv:Envelope>`;
+
+            xmlhttp.setRequestHeader('Content-Type', 'text/xml');
+
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4) {
+                    if (xmlhttp.status == 200) {
+                        var response = xmlhttp.responseXML;
+                        mostrarDatos(response);
+                    }
+                }
+            }
+
+            xmlhttp.send(soapRequest);
+        }
+
+        function mostrarDatos(xml) {
+            var i;
+            var xmlDoc = xml.documentElement;
+            var table="<tr><th>Apellido</th><th>Nombre</th><th>Documento</th></tr>";
+            var x = xmlDoc.getElementsByTagName("result");
+            for (i = 0; i < x.length; i++) { 
+                var personas = JSON.parse(x[i].childNodes[0].nodeValue);
+                personas.forEach(persona => {
+                    table += "<tr><td>" +
+                    persona.Apellido +
+                    "</td><td>" +
+                    persona.Nombre +
+                    "</td><td>" +
+                    persona.DNI +
+                    "</td></tr>";
+                });
+            }
+            document.getElementById("tablaPersonas").innerHTML = table;
+        }
+
+        function agregarPersona() {
+            var apellido = document.getElementById('apellido');
+            var nombre = document.getElementById('nombre');
+            var dni = document.getElementById('dni');
+        
+            fetch('http://localhost:8080/insertar_con_rest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"Apellido": apellido.value, "Nombre": nombre.value, "DNI": dni.value})
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Persona agregada con éxito");
+                consumirServicioSOAP(); // Recargar los datos
+        
+                // Limpiar los campos del formulario
+                apellido.value = '';
+                nombre.value = '';
+                dni.value = '';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+    </script>
+</head>
+<body>
+    <h1>Consumir Servicio SOAP y REST</h1>
+
+    <!-- Formulario para agregar nuevas personas -->
+    <form onSubmit="event.preventDefault(); agregarPersona();">
+        <input type="text" id="apellido" placeholder="Apellido" required />
+        <input type="text" id="nombre" placeholder="Nombre" required />
+        <input type="text" id="dni" placeholder="DNI" required />
+        <input type="submit" value="Agregar Persona" />
+    </form>
+
+    <h2>Listado de Personas</h2>
+    <table id="tablaPersonas"></table>
+</body>
+</html>
